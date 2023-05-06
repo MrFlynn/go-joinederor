@@ -24,8 +24,7 @@ func UnwrapMany(err error) []error {
 		return nil
 	}
 
-	errors := err.(multiErrorUnwrapper)
-	return errors.Unwrap()
+	return err.(multiErrorUnwrapper).Unwrap()
 }
 
 func prependError(errors []error, err error) []error {

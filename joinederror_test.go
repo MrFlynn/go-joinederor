@@ -15,12 +15,14 @@ var equateErrors = cmp.Comparer(func(x, y error) bool {
 	return x.Error() == y.Error()
 })
 
+type testCase struct {
+	name       string
+	inputError error
+	expected   []error
+}
+
 func Test_UnwrapMany(t *testing.T) {
-	testCases := []struct {
-		name       string
-		inputError error
-		expected   []error
-	}{
+	testCases := []testCase{
 		{
 			name:       "single_error",
 			inputError: errors.Join(errors.New("lorem")),

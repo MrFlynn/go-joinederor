@@ -70,3 +70,81 @@ func Test_UnwrapMany(t *testing.T) {
 		})
 	}
 }
+
+func Test_UnwrapAll(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:       "nil",
+			inputError: nil,
+			expected:   []error{},
+		},
+		{
+			name:       "basic_error",
+			inputError: errors.New("hello world"),
+			expected:   []error{errors.New("hello world")},
+		},
+		{
+			name: "nested_simple",
+			inputError: errors.Join(
+				errors.New("lorem"),
+				errors.Join(errors.New("ipsum"), errors.New("dolor")),
+			),
+			expected: []error{
+				errors.New("lorem"), errors.New("ipsum"), errors.New("dolor"),
+			},
+		},
+		{
+			name: "double_nested",
+			inputError: errors.Join(
+				errors.New("lorem"),
+				errors.Join(
+					errors.New("ipsum"),
+					errors.New("dolor"),
+					errors.Join(errors.New("sit"), errors.New("amet")),
+				),
+			),
+			expected: []error{
+				errors.New("lorem"),
+				errors.New("ipsum"),
+				errors.New("dolor"),
+				errors.New("sit"),
+				errors.New("amet"),
+			},
+		},
+		{
+			name: "nested_complex",
+			inputError: errors.Join(
+				errors.New("lorem"),
+				errors.Join(errors.New("ipsum"), errors.New("dolor")),
+				errors.New("sit"),
+				errors.New("amet"),
+				errors.Join(
+					errors.New("consectetur"),
+					errors.New("adipiscing"),
+					errors.Join(errors.New("elit"), errors.New("sed")),
+				),
+			),
+			expected: []error{
+				errors.New("lorem"),
+				errors.New("ipsum"),
+				errors.New("dolor"),
+				errors.New("sit"),
+				errors.New("amet"),
+				errors.New("consectetur"),
+				errors.New("adipiscing"),
+				errors.New("elit"),
+				errors.New("sed"),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			diff := cmp.Diff(tc.expected, UnwrapAll(tc.inputError), equateErrors)
+
+			if diff != "" {
+				t.Errorf("Error slice mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

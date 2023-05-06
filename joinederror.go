@@ -27,3 +27,39 @@ func UnwrapMany(err error) []error {
 	errors := err.(multiErrorUnwrapper)
 	return errors.Unwrap()
 }
+
+func prependError(errors []error, err error) []error {
+	errors = append(errors, nil)
+	copy(errors[1:], errors)
+	errors[0] = err
+
+	return errors
+}
+
+// UnwrapAll is similar to UnwrapMany except it unwraps joined errors recursively.
+func UnwrapAll(err error) []error {
+	var (
+		allErrors = []error{}
+		errStack  = newStack[error]()
+	)
+
+	errStack.push(err)
+
+	for !errStack.empty() {
+		top, _ := errStack.pop()
+
+		if top == nil {
+			continue
+		}
+
+		if !implementsMultiErrorUnwrapper(top) {
+			allErrors = prependError(allErrors, top)
+		} else {
+			for _, e := range top.(multiErrorUnwrapper).Unwrap() {
+				errStack.push(e)
+			}
+		}
+	}
+
+	return allErrors
+}

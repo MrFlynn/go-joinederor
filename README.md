@@ -13,17 +13,34 @@ $ go get github.com/mrflynn/go-joinederror
 
 ## Usage
 
-Below is an example of how to use this library.
+This library provides two ways to unpack joined errors. `UnwrapMany` unpacks
+the top level joined errors, and `UnwrapAll` recursively unpacks all joined
+errors at every level. For example,
 
 ```go
 // Create a joined error.
-err := errors.Join(firstErr, secondErr)
+err := errors.Join(
+	errors.New("lorem"),
+	errors.New("ipsum"),
+	errors.Join(errors.New("dolor"), errors.New("sit")),
+)
 
-// Unpack and interate.
-errs := joinederrors.UnwrapMany(err)
-if errs != nil {
-    for _, e := range errs {
-        fmt.Println(e) // Prints firstErr and then secondErr.
-    }
+// UnwrapMany:
+comparison := []error{
+	errors.New("lorem"),
+	errors.New("ipsum"),
+	errors.Join(errors.New("dolor"), errors.New("sit"))
 }
+
+fmt.Println(reflect.DeepEqual(joinederror.UnwrapMany(err), comparison)) // Prints true
+
+// UnwrapAll:
+comparison := []error{
+	errors.New("lorem"),
+	errors.New("ipsum"),
+	errors.New("dolor"),
+	errors.New("sit"),
+}
+
+fmt.Println(reflect.DeepEqual(joinederror.UnwrapAll(err), comparison)) // Prints true
 ```
